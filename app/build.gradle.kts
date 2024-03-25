@@ -74,9 +74,15 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    implementation("androidx.media3:media3-exoplayer:1.1.1")
-    implementation("androidx.media3:media3-exoplayer-rtsp:1.1.1")
+    implementation("androidx.media3:media3-exoplayer:1.2.0")
+    implementation("androidx.media3:media3-exoplayer-rtsp:1.2.0")
 
-    implementation("org.videolan.android:libvlc-all:3.5.1")
+    implementation("org.videolan.android:libvlc-all:4.0.0-eap13")
 
+
+
+
+
+    implementation("com.github.pedroSG94:RTSP-Server:1.2.6")
+    implementation("com.github.pedroSG94.RootEncoder:library:2.4.3")
 }
