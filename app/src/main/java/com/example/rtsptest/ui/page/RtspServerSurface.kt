@@ -1,9 +1,11 @@
 package com.example.rtsptest.ui.page
 
 import android.graphics.SurfaceTexture
+import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Text
@@ -23,11 +25,12 @@ import com.pedro.rtspserver.RtspServerStream
 
 @Composable
 fun RtspServerSurface() {
-
-    var text by remember { mutableStateOf("") }
+    var click by remember { mutableStateOf({}) }
 
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable { click() },
         factory = {
             TextureView(it).apply {
                 val view = this
@@ -37,25 +40,36 @@ fun RtspServerSurface() {
                         val camera = CameraController(it)
                         camera.openCamera(it, 0, Surface(p0))
 
-                        RtspServerStream(
-                            it,
-                            33333,
-                            FakeConnectChecker,
-                            TextureViewVideoSource(view),
-                            NoAudioSource()
-                        ).apply {
-                            prepareVideo(
-                                width = p1,
-                                height = p2,
-                                bitrate = 3000000,
-                                fps = 30,
-                                iFrameInterval = 1,
-                            )
-                            startPreview(view)
-
-                            startStream()
+                        click = {
+                            RtspServerStream(
+                                it,
+                                33333,
+                                FakeConnectChecker,
+                                TextureViewVideoSource(view),
+                                NoAudioSource()
+                            ).apply {
+                                val boo = prepareVideo(
+                                    width = 1920,
+                                    height = 1080,
+                                    bitrate = 300000,
+                                    fps = 30,
+                                    iFrameInterval = 1,
+                                )
+                                val audioBoo =
+                                    prepareAudio(
+                                        sampleRate = 0,
+                                        isStereo = false,
+                                        bitrate = 0,
+                                        echoCanceler = false,
+                                        noiseSuppressor = false
+                                    )
+                                if (boo && audioBoo) {
+                                    startStream()
+                                } else {
+                                    Log.d("!!!", "onSurfaceTextureAvailable: prepareVideo = false")
+                                }
+                            }
                         }
-
                     }
 
                     override fun onSurfaceTextureSizeChanged(p0: SurfaceTexture, p1: Int, p2: Int) {
@@ -70,13 +84,4 @@ fun RtspServerSurface() {
                 }
             }
         })
-
-
-    Text(
-        text = text,
-        color = Color.White,
-        modifier = Modifier
-            .wrapContentSize()
-            .background(Color.Black)
-    )
 }
