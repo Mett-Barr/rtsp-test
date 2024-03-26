@@ -23,37 +23,16 @@ import java.nio.ByteBuffer
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class MyRtspServer(
     context: Context, port: Int, connectChecker: ConnectChecker,
-    val textureView: TextureView
-): StreamBase(context, TextureViewVideoSource(textureView), NoAudioSource()) {
+    videoSource: VideoSource, audioSource: AudioSource,
+): StreamBase(context, videoSource, audioSource) {
 
     val rtspServer = RtspServer(connectChecker, port)
 
     fun startStream() {
-
-//        prepareVideo(
-//            width = textureView.width,
-//            height = textureView.height,
-//            bitrate = 3000000,
-//            fps = 30,
-//            iFrameInterval = 1,
-//        )
-//
-//        prepareAudio(
-//            sampleRate = 0,
-//            isStereo = false,
-//            bitrate = 0,
-//            echoCanceler = false,
-//            noiseSuppressor = false
-//        )
-
-//        rtspServer.setOnlyVideo(true)
-
         super.startStream("")
-
-
-
-        
         rtspServer.startServer()
+
+        Log.d("!!!", "startStream: ${getStreamClient().getEndPointConnection()}")
     }
 
     override fun audioInfo(sampleRate: Int, isStereo: Boolean) {
