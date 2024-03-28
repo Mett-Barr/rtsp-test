@@ -4,20 +4,17 @@ import android.content.Context
 import android.graphics.SurfaceTexture
 import android.os.Build
 import android.util.Log
-import android.view.Surface
 import androidx.annotation.RequiresApi
-import com.example.rtsptest.camera.CameraController
-import com.example.rtsptest.camera.testCameraPreview
 import com.pedro.encoder.input.video.Camera2ApiManager
 import com.pedro.encoder.input.video.CameraHelper
 import com.pedro.library.util.sources.video.VideoSource
 
+
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class CameraVideoSource(
-    val context: Context,
-    val cameraController: CameraController = CameraController(context)
-) : VideoSource() {
-    var boo = false
+class MyCamera2Source(context: Context): VideoSource() {
+
+    private val camera = Camera2ApiManager(context)
+    private var facing = CameraHelper.Facing.BACK
 
     override fun create(width: Int, height: Int, fps: Int): Boolean {
         return true
@@ -25,19 +22,20 @@ class CameraVideoSource(
 
     override fun start(surfaceTexture: SurfaceTexture) {
         this.surfaceTexture = surfaceTexture
+        if (!isRunning()) {
+            surfaceTexture.setDefaultBufferSize(width, height)
+            camera.prepareCamera(surfaceTexture, width, height, fps, facing)
+            camera.openCameraFacing(facing)
 
-        surfaceTexture.setDefaultBufferSize(width, height)
-        cameraController.openCamera(context, surfaceTexture)
-
-        boo = true
+            Log.d("!!!", "start: MyCamera2Source")
+        }
     }
 
     override fun stop() {
+        if (isRunning()) camera.closeCamera()
     }
 
-    override fun release() {
-        // 释放相关资源
-    }
+    override fun release() {}
 
-    override fun isRunning(): Boolean = boo
+    override fun isRunning(): Boolean = camera.isRunning
 }

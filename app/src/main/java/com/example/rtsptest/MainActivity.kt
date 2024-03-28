@@ -42,6 +42,7 @@ import com.example.rtsptest.ui.theme.RTSPTestTheme
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    // Rtsp範例
                     RtspServerSurface()
                 }
             }

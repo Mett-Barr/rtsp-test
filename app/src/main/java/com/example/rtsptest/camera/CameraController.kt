@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
+import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
@@ -134,7 +135,7 @@ class CameraController(context: Context) {
         }
 
         // 创建一个基于SurfaceTexture的Surface
-        surfaceTexture.setDefaultBufferSize(640, 480)
+        surfaceTexture.setDefaultBufferSize(1920, 1080)
         previewSurface = Surface(surfaceTexture)
 
         cameraManager.openCamera(
@@ -155,6 +156,47 @@ class CameraController(context: Context) {
 
                     // 实例化ImageReader用于捕获图片
                     imageReader = ImageReader.newInstance(previewSize!!.width, previewSize.height, ImageFormat.JPEG, 10)
+
+                    createCameraPreviewSession(context, camera)
+                }
+
+                override fun onDisconnected(camera: CameraDevice) {
+                    camera.close()
+                    cameraDevice = null
+                }
+
+                override fun onError(camera: CameraDevice, error: Int) {
+                    camera.close()
+                    cameraDevice = null
+                }
+            },
+            null
+        )
+    }
+
+    fun open(context: Context) {
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+
+        // 创建一个基于SurfaceTexture的Surface
+
+        cameraManager.openCamera(
+            cameraList[0], object : CameraDevice.StateCallback() {
+                @RequiresApi(Build.VERSION_CODES.P)
+                override fun onOpened(camera: CameraDevice) {
+                    cameraDevice = camera
+
+                    val characteristics = cameraManager.getCameraCharacteristics(cameraList[0])
+                    val configurationMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+
+                    // 获取最大的预览尺寸
+                    configurationMap?.getOutputSizes(SurfaceTexture::class.java)?.forEach {
+                        Log.d("CameraResolution", "Max preview size: ${it?.width} x ${it?.height}")
+                    }
+
+                    // 实例化ImageReader用于捕获图片
 
                     createCameraPreviewSession(context, camera)
                 }
@@ -276,4 +318,59 @@ class CameraController(context: Context) {
             cameraCaptureSession?.captureBurst(captureRequests, null, handler)
         }
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+fun testCameraPreview(context: Context, surfaceTexture: SurfaceTexture) {
+    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+        // 权限问题处理
+        return
+    }
+
+    val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    val cameraList = cameraManager.cameraIdList
+    if (cameraList.isEmpty()) {
+        // 无可用相机处理
+        return
+    }
+
+    // 选择后置相机，模拟openCameraFacing的行为
+    val cameraId = cameraList.find { id ->
+        val characteristics = cameraManager.getCameraCharacteristics(id)
+        val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
+        facing == CameraCharacteristics.LENS_FACING_BACK
+    } ?: return
+
+    cameraManager.openCamera(cameraId, object : CameraDevice.StateCallback() {
+        override fun onOpened(camera: CameraDevice) {
+            // 使用提供的SurfaceTexture设置预览尺寸
+            surfaceTexture.setDefaultBufferSize(1920, 1080)  // 假设1920x1080是最优分辨率
+            val previewSurface = Surface(surfaceTexture)
+
+            camera.createCaptureSession(listOf(previewSurface), object : CameraCaptureSession.StateCallback() {
+                override fun onConfigured(session: CameraCaptureSession) {
+                    try {
+                        val requestBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+                            addTarget(previewSurface)
+                        }
+                        session.setRepeatingRequest(requestBuilder.build(), null, null)
+                    } catch (e: CameraAccessException) {
+                        // 配置失败处理
+                    }
+                }
+
+                override fun onConfigureFailed(session: CameraCaptureSession) {
+                    // 配置失败处理
+                }
+            }, null)
+        }
+
+        override fun onDisconnected(camera: CameraDevice) {
+            camera.close()
+        }
+
+        override fun onError(camera: CameraDevice, error: Int) {
+            camera.close()
+        }
+    }, null)
 }
