@@ -7,6 +7,8 @@ import android.util.Log
 import android.view.Surface
 import androidx.annotation.RequiresApi
 import com.example.rtsptest.camera.CameraController
+import com.example.rtsptest.camera.HEIGHT
+import com.example.rtsptest.camera.WIDTH
 import com.example.rtsptest.camera.testCameraPreview
 import com.pedro.encoder.input.video.Camera2ApiManager
 import com.pedro.encoder.input.video.CameraHelper
@@ -20,6 +22,8 @@ class CameraVideoSource(
     var boo = false
 
     override fun create(width: Int, height: Int, fps: Int): Boolean {
+        this.width = WIDTH
+        this.height = HEIGHT
         return true
     }
 

@@ -1,1 +1,1 @@
-Click Screen to start stream
+Click Screen to start preview

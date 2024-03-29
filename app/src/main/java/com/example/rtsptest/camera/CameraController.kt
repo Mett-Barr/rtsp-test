@@ -27,6 +27,9 @@ import java.util.Collections
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
+const val WIDTH = 640
+const val HEIGHT = 480
+
 class CameraController(context: Context) {
     private val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     private val cameraList = cameraManager.cameraIdList
@@ -135,7 +138,8 @@ class CameraController(context: Context) {
         }
 
         // 创建一个基于SurfaceTexture的Surface
-        surfaceTexture.setDefaultBufferSize(1920, 1080)
+        surfaceTexture.setDefaultBufferSize(HEIGHT, WIDTH)
+//        surfaceTexture.setDefaultBufferSize(WIDTH, HEIGHT)
         previewSurface = Surface(surfaceTexture)
 
         cameraManager.openCamera(
